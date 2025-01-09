@@ -1,4 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { uiAction } from "./ui-slice";
 
 const cartSlice = createSlice({
   name: "cart",
@@ -38,6 +39,46 @@ const cartSlice = createSlice({
     },
   },
 });
+
+export const sendCartData = (cart) => {
+  return async (dispatch) => {
+    dispatch(
+      uiAction.showNotification({
+        status: "pending",
+        title: "Sending....",
+        message: "Sending cart data",
+      })
+    );
+
+    const sendRequest = async () => {
+      const response = await fetch(`http://localhost:3000/addProduct`, {
+        method: "PUT",
+        body: JSON.stringify(cart),
+      });
+      if (!response.ok) {
+        throw new Error("Sending cart data failed");
+      }
+    };
+    try {
+      await sendRequest();
+      dispatch(
+        uiAction.showNotification({
+          status: "Success",
+          title: "Success....",
+          message: "Sending cart data successfully",
+        })
+      );
+    } catch (error) {
+      dispatch(
+        uiAction.showNotification({
+          status: "error",
+          title: "Error!",
+          message: "Sending cart data failed",
+        })
+      );
+    }
+  };
+};
 
 export const cartActions = cartSlice.actions;
 

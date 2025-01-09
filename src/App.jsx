@@ -3,56 +3,41 @@ import { useEffect } from "react";
 import Cart from "./components/Cart/Cart";
 import Layout from "./components/Layout/Layout";
 import Products from "./components/Shop/Products";
-import { uiAction } from "./store/ui-slice";
+import { sendCartData } from "./store/cart-slice";
+import { Fragment } from "react";
+import Notification from "./components/UI/Notification";
+
+let isInitial = true;
 
 function App() {
   const showCart = useSelector((state) => state.ui.cartVisible);
   const cart = useSelector((state) => state.cart);
+  const notification = useSelector((state) => state.ui.notification);
   const dispatch = useDispatch();
 
   useEffect(() => {
-    const sendCartData = async () => {
-      dispatch(
-        uiAction.showNotification({
-          status: "pending",
-          title: "Sending....",
-          message: "Sending cart data",
-        })
-      );
-      const response = await fetch(`http://localhost:3000/addProduct`, {
-        method: "PUT",
-        body: JSON.stringify(cart),
-      });
-      if (!response.ok) {
-        throw new Error("Sending cart data failed");
-      }
+    if (isInitial) {
+      isInitial = false;
+      return;
+    }
 
-      dispatch(
-        uiAction.showNotification({
-          status: "Success",
-          title: "Success....",
-          message: "Sending cart data successfully",
-        })
-      );
-
-      const responseData = await response.json();
-    };
-    sendCartData().catch((error) => {
-      dispatch(
-        uiAction.showNotification({
-          status: "error",
-          title: "Error!",
-          message: "Sending cart data failed",
-        })
-      );
-    });
+    dispatch(sendCartData(cart));
   }, [cart, dispatch]);
 
   return (
-    <Layout>
-      {showCart && <Cart />}
-      <Products />
-    </Layout>
+    <Fragment>
+      {notification && (
+        <Notification
+          status={notification.status}
+          title={notification.title}
+          message={notification.message}
+        />
+      )}
+      <Layout>
+        {showCart && <Cart />}
+        <Products />
+      </Layout>
+    </Fragment>
   );
 }
 
